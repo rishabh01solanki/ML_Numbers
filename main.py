@@ -94,7 +94,7 @@ learning_rate = 0.1
 n = neuralNetwork(input_nodes,hidden_nodes,output_nodes, learning_rate)
 
 # load the mnist training data CSV file into a list
-training_data_file = open("mnist_dataset/mnist_train_100.csv", 'r')
+training_data_file = open("mnist_dataset/mnist_train.csv", 'r')
 training_data_list = training_data_file.readlines()
 training_data_file.close()
 
@@ -122,16 +122,7 @@ for e in range(epochs):
 
 # load image data from png files into an array
 print ("loading ...")
-
-
-image = Image.open('my_own_images/image1.png')
-print(f"Original size : {image.size}") 
-img_resized = image.resize((28, 28))
-print(f"Current size : {img_resized.size}")
-img_resized.save('img.png')
-
-img_array = imageio.imread('img.png', as_gray=True)
-
+img_array = imageio.imread('my_own_images/image6.png', as_gray=True)
     
 # reshape from 28x28 to list of 784 values, invert values
 img_data  = 255.0 - img_array.reshape(784)
