@@ -31,6 +31,7 @@ class neuralNetwork:
         
         # activation function is the sigmoid function
         self.activation_function = lambda x: scipy.special.expit(x)
+        self.inverse_activation_function = lambda x: scipy.special.logit(x)
         
         pass
 
@@ -81,8 +82,41 @@ class neuralNetwork:
         final_outputs = self.activation_function(final_inputs)
         
         return final_outputs
+    
+    
+    # backquery the neural network
+    # we'll use the same termnimology to each item, 
+    # eg target are the values at the right of the network, albeit used as input
+    # eg hidden_output is the signal to the right of the middle nodes
+    def backquery(self, targets_list):
+        # transpose the targets list to a vertical array
+        final_outputs = numpy.array(targets_list, ndmin=2).T
+        
+        # calculate the signal into the final output layer
+        final_inputs = self.inverse_activation_function(final_outputs)
 
-# number of input, hidden and output nodes
+        # calculate the signal out of the hidden layer
+        hidden_outputs = numpy.dot(self.who.T, final_inputs)
+        # scale them back to 0.01 to .99
+        hidden_outputs -= numpy.min(hidden_outputs)
+        hidden_outputs /= numpy.max(hidden_outputs)
+        hidden_outputs *= 0.98
+        hidden_outputs += 0.01
+        
+        # calculate the signal into the hidden layer
+        hidden_inputs = self.inverse_activation_function(hidden_outputs)
+        
+        # calculate the signal out of the input layer
+        inputs = numpy.dot(self.wih.T, hidden_inputs)
+        # scale them back to 0.01 to .99
+        inputs -= numpy.min(inputs)
+        inputs /= numpy.max(inputs)
+        inputs *= 0.98
+        inputs += 0.01
+        
+        return inputs
+
+    # number of input, hidden and output nodes
 input_nodes = 784
 hidden_nodes = 200
 output_nodes = 10
@@ -118,27 +152,20 @@ for e in range(epochs):
         pass
     pass
 
-# test the neural network with our own images
+# run the network backwards, given a label, see what image it produces
 
-# load image data from png files into an array
-print ("loading ...")
-img_array = imageio.imread('my_own_images/4.png', as_gray=True)
-    
-# reshape from 28x28 to list of 784 values, invert values
-img_data  = 255.0 - img_array.reshape(784)
-    
-# then scale data to range from 0.01 to 1.0
-img_data = (img_data / 255.0 * 0.99) + 0.01
-print("min = ", numpy.min(img_data))
-print("max = ", numpy.max(img_data))
+# label to test
+label = 9
+# create the output signals for this label
+targets = numpy.zeros(output_nodes) + 0.01
+# all_values[0] is the target label for this record
+targets[label] = 0.99
+print(targets)
 
-# plot image
-matplotlib.pyplot.imshow(img_data.reshape(28,28), cmap='Greys', interpolation='None')
+# get image data
+image_data = n.backquery(targets)
 
-# query the network
-outputs = n.query(img_data)
-print (outputs)
+# plot image data
+matplotlib.pyplot.imshow(image_data.reshape(28,28), cmap='Greys', interpolation='None')
+matplotlib.pyplot.savefig("imagebrain.png")
 
-# the index of the highest value corresponds to the label
-label = numpy.argmax(outputs)
-print("network says ", label)
